@@ -1,0 +1,22 @@
+# The site is fully static: GitHub/GitLab project data is fetched at BUILD TIME only.
+# This workflow POSTs the Cloudflare Pages Deploy Hook once a day so the site rebuilds
+# and the project listings/stats stay fresh without any code changes.
+name: Daily redeploy
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+# Least privilege (security-baseline §4): this workflow only POSTs an external hook,
+# so the GITHUB_TOKEN gets no repo permissions at all.
+permissions: {}
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages deploy hook
+        env:
+          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$CLOUDFLARE_DEPLOY_HOOK"

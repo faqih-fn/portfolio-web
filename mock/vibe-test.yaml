@@ -1,0 +1,74 @@
+# Purpose: vibe-test phase definitions for the portfolio-web static site and its contact Pages Function.
+#
+# Privacy note: the ONLY email-like strings allowed in this file are clearly-fake
+# RFC-2606 fixtures (@example.com) inside test-case bodies — the contact contract's
+# zod validation requires a syntactically valid sender email. This matches the
+# security-baseline PR-checklist carve-out. The owner's real email must never appear
+# here or anywhere else in the repo; the phase_1 leak guard enforces that for dist/.
+
+phase_1:
+  timeout_sec: 900
+  commands:
+    - npm ci
+    - npm run lint
+    - npm run typecheck
+    - npm run build
+    # Email-leak guard: asserts no email address leaks into the built output (dist/).
+    # grep exits non-zero when nothing matches, so the leading '!' makes a clean dist/ pass.
+    - "bash -c '! grep -RnIE \"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\\.[A-Za-z]{2,}\" dist/'"
+
+phase_1r:
+  timeout_sec: 300
+  mock_up:
+    # The contact function verifies Turnstile BEFORE the honeypot check, so local runs
+    # must set Cloudflare's official always-passing TEST secret key, otherwise the
+    # honeypot case below would fail at verification (403) before reaching the honeypot:
+    #   TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+    # (Pair: always-passing test site key 1x00000000000000000000AA for the client.)
+    command: TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA npx wrangler pages dev dist --port 8788
+    health_check_url: http://localhost:8788/
+    health_check_retries: 20
+  cases:
+    - id: dashboard-200
+      method: GET
+      path: /
+      expected_status: 200
+    - id: projects-200
+      method: GET
+      path: /projects
+      expected_status: 200
+    - id: about-200
+      method: GET
+      path: /about
+      expected_status: 200
+    - id: contact-empty-body-400
+      method: POST
+      path: /api/contact
+      headers:
+        Content-Type: application/json
+      body: "{}"
+      expected_status: 400
+      expected_body: '{"ok":false,"error":"invalid_input"}'
+    # Honeypot silent accept: bots that fill the hidden "website" field get a generic
+    # 200 {"ok":true} and NO email is sent — responding 200 (not 4xx) hides from the
+    # bot that it was detected, so it does not adapt and retry.
+    - id: contact-honeypot-silent-200
+      method: POST
+      path: /api/contact
+      headers:
+        Content-Type: application/json
+      body: '{"name":"Bot","email":"bot@example.com","message":"This is an automated spam message.","turnstileToken":"dummy-token","website":"filled"}'
+      expected_status: 200
+      expected_body: '{"ok":true}'
+    # Turnstile-failure case (expects 403 verification_failed). Commented out because the
+    # always-passing TEST secret key above accepts every token, so a 403 can't be provoked
+    # with it. Enable this case only when running against Cloudflare's always-FAILING test
+    # secret key (2x0000000000000000000000000000000AA) in a dedicated run.
+    # - id: contact-turnstile-failure-403
+    #   method: POST
+    #   path: /api/contact
+    #   headers:
+    #     Content-Type: application/json
+    #   body: '{"name":"Tester","email":"tester@example.com","message":"A valid-length test message.","turnstileToken":"invalid-token","website":""}'
+    #   expected_status: 403
+    #   expected_body: '{"ok":false,"error":"verification_failed"}'

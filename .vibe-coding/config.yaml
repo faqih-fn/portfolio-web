@@ -1,0 +1,4 @@
+# vibe-pr-review (and the other vibe pipeline skills) resolve the knowledge base through
+# this file: kb_root is read relative to the repo root, and the tooling validates that
+# registry.yaml + architecture/ + repos/ exist under it before running a review.
+kb_root: ../portfolio-vibe-coding
