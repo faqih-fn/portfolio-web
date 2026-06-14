@@ -1,0 +1,100 @@
+---
+// src/pages/about.astro — About (/about) (T4, F-06).
+// Static profile page: ZERO page-level interactive islands (the only hydrated pieces on
+// the page are the global shell's ThemeToggle + ContactModal mounted by BaseLayout — this
+// page adds none of its own). Links GitHub / GitLab / LinkedIn from site.ts. No email
+// address and no email-protocol links anywhere (AGENTS.md §7, baseline §5). Contact is
+// exclusively via the Hire-me button → ContactModal (the [data-contact-open] trigger
+// contract), never an email link.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import site from '../config/site';
+
+const githubUrl = `https://github.com/${site.githubUsername}`;
+const gitlabUrl = site.gitlabUsername ? `https://gitlab.com/${site.gitlabUsername}` : null;
+
+interface ProfileLink {
+  label: string;
+  href: string;
+}
+const profileLinks: ProfileLink[] = [
+  { label: 'GitHub', href: githubUrl },
+  ...(gitlabUrl ? [{ label: 'GitLab', href: gitlabUrl }] : []),
+  { label: 'LinkedIn', href: site.linkedinUrl },
+];
+---
+
+<BaseLayout
+  title="About"
+  description="About Muhammad Faqih — QA Engineer / SDET building resilient test automation and CI quality gates."
+>
+  <section class="mx-auto max-w-3xl px-4 pt-12 pb-8 sm:pt-16">
+    <p class="reveal text-sm font-semibold uppercase tracking-widest text-[var(--color-brand-600)]">
+      {site.role}
+    </p>
+    <h1 class="reveal mt-3 text-3xl font-bold tracking-tight text-[var(--color-ink)] sm:text-4xl">
+      About {site.ownerName}
+    </h1>
+
+    <div class="reveal mt-6 space-y-4 text-base leading-relaxed text-[var(--color-ink-muted)]">
+      <p>
+        I'm a QA Engineer / SDET focused on building resilient test automation and CI
+        quality gates across web, mobile, and API layers — so teams ship faster with fewer
+        regressions.
+      </p>
+      <p>
+        My day-to-day spans designing maintainable end-to-end suites (Page Object models,
+        data-driven cases), automating mobile flows with Appium, validating API contracts,
+        and wiring quality gates into CI/CD pipelines that block merges on a red run.
+      </p>
+      <p>
+        I care about test reliability, fast feedback, and treating test code with the same
+        engineering rigor as production code.
+      </p>
+    </div>
+
+    <h2 class="mt-10 text-lg font-bold tracking-tight text-[var(--color-ink)]">
+      Core tools
+    </h2>
+    <ul class="mt-4 flex flex-wrap items-center gap-2">
+      {
+        site.techStack.map((tool) => (
+          <li class="rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-muted)]">
+            {tool}
+          </li>
+        ))
+      }
+    </ul>
+
+    <h2 class="mt-10 text-lg font-bold tracking-tight text-[var(--color-ink)]">
+      Find me
+    </h2>
+    <ul class="mt-4 flex flex-wrap items-center gap-3">
+      {
+        profileLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              rel="me noopener noreferrer"
+              target="_blank"
+              class="lift inline-flex items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-muted)]"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="mt-8 text-sm text-[var(--color-ink-muted)]">
+      Want to work together? Use the
+      <button
+        type="button"
+        data-contact-open
+        class="font-semibold text-[var(--color-brand-600)] underline-offset-2 hover:underline"
+      >
+        Hire me
+      </button>
+      button to send a message — no inbox hunting required.
+    </p>
+  </section>
+</BaseLayout>
