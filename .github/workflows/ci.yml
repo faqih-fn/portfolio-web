@@ -104,8 +104,11 @@ jobs:
           fetch-depth: 0
 
       # Pinned by SHA (baseline §5). Scans the repo/diff for secret-looking literals.
+      # gitleaks-action v2 requires GITHUB_TOKEN to determine the PR commit range.
       - name: gitleaks
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lighthouse:
     name: Lighthouse hard gate (>= 0.95 mobile)
@@ -128,15 +131,8 @@ jobs:
         run: npm run build
 
       # F-09 hard gate: performance/accessibility/best-practices/seo >= 0.95, LCP < 2000ms,
-      # CLS < 0.1, against the built static dist/. @lhci/cli pinned to a minor range.
+      # CLS < 0.1, against the built static dist/. Assertions live in lighthouserc.json
+      # (canonical [level, {minScore|maxNumericValue}] form; autorun auto-discovers it).
+      # @lhci/cli pinned to a minor range (0.15.x is current latest; 0.16.x does not exist).
       - name: Lighthouse CI (assertions >= 0.95)
-        run: |
-          npx @lhci/cli@0.16.x autorun \
-            --collect.staticDistDir=./dist \
-            --collect.numberOfRuns=3 \
-            --assert.assertions.categories:performance=0.95 \
-            --assert.assertions.categories:accessibility=0.95 \
-            --assert.assertions.categories:best-practices=0.95 \
-            --assert.assertions.categories:seo=0.95 \
-            --assert.assertions.largest-contentful-paint=2000 \
-            --assert.assertions.cumulative-layout-shift=0.1
+        run: npx @lhci/cli@0.15.x autorun
