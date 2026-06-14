@@ -1,1 +1,111 @@
+/* src/styles/global.css
+ * THE single theme-token + global style file (AGENTS.md §4: design tokens in one file,
+ * no arbitrary one-off colors in components). Tailwind CSS 4 entry.
+ */
 @import "tailwindcss";
+
+/* Self-hosted Inter Variable (D-12, F-09.6, no-font-CDN anti-goal).
+ * Fontsource ships latin subset + font-display: swap; files are hashed into dist/_astro/. */
+@import "@fontsource-variable/inter";
+
+/* Tailwind 4 class-strategy dark mode (D-11). `dark` class is toggled on <html> by
+ * public/theme-init.js (no-flash) and the ThemeToggle island. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * Design tokens (AGENTS.md §4 — single source). Light + dark values.
+ * Tokens chosen for >= 4.5:1 text/background contrast in both themes (F-08.5).
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-card: 1rem; /* rounded-2xl cards (brief §4) */
+
+  /* Brand accent ramp (soft gradient accents, brief §4). */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+
+  /* Semantic surface/ink tokens — light theme defaults. */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc; /* slate-50 */
+  --color-card: #ffffff;
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-ink: #0f172a; /* slate-900 — body text on light */
+  --color-ink-muted: #475569; /* slate-600 */
+  --color-bg-from: #eef2ff; /* gradient backdrop start */
+  --color-bg-to: #ffffff;
+}
+
+/* Dark-theme token overrides. Applied whenever <html> carries the `dark` class. */
+:where(.dark) {
+  --color-surface: #0b1120; /* near slate-950 */
+  --color-surface-muted: #0f172a; /* slate-900 */
+  --color-card: #111827; /* gray-900 */
+  --color-border: #1e293b; /* slate-800 */
+  --color-ink: #e2e8f0; /* slate-200 — body text on dark */
+  --color-ink-muted: #94a3b8; /* slate-400 */
+  --color-bg-from: #0b1120;
+  --color-bg-to: #111827;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base element styling driven by the tokens above.
+ * ------------------------------------------------------------------------- */
+html {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image: linear-gradient(180deg, var(--color-bg-from), var(--color-bg-to));
+  background-attachment: fixed;
+  color: var(--color-ink);
+}
+
+/* Visible focus rings everywhere (F-08, never suppressed). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion layer — micro-interactions + scroll reveals are CSS-only (D-11),
+ * preserving the 3-island budget, and gated behind prefers-reduced-motion
+ * (F-08.6). No motion is applied when the user prefers reduced motion.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .reveal {
+    animation: reveal-up 0.5s ease-out both;
+  }
+
+  /* Subtle hover lift on cards/links (micro-interactions, brief §4). */
+  .lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+  }
+}

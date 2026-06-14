@@ -1,0 +1,59 @@
+---
+// src/components/Topbar.astro
+// Sticky glass-effect topbar (brief §5). Nav order EXACTLY from site.ts: Dashboard,
+// Projects, About — then the "Hire me" BUTTON (opens ContactModal; NOT a nav page, no
+// /contact route) and the ThemeToggle island. Static component: ships zero client JS of
+// its own; the only interactive piece is the ThemeToggle island and the Hire-me button,
+// whose handler lives in the ContactModal island.
+import site from '../config/site';
+import ThemeToggle from '../islands/ThemeToggle.astro';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path.startsWith(href);
+---
+
+<nav
+  aria-label="Primary"
+  class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_72%,transparent)] backdrop-blur-md"
+>
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+    <a href="/" class="text-sm font-semibold tracking-tight text-[var(--color-ink)]">
+      {site.ownerName}
+    </a>
+
+    <div class="flex items-center gap-1 sm:gap-2">
+      <ul class="flex items-center gap-1 sm:gap-2">
+        {
+          site.navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                class:list={[
+                  'rounded-lg px-2.5 py-1.5 text-sm transition-colors hover:bg-[var(--color-surface-muted)]',
+                  isActive(item.href)
+                    ? 'font-semibold text-[var(--color-brand-600)]'
+                    : 'text-[var(--color-ink-muted)]',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <!-- "Hire me" opens ContactModal (data-contact-open is the trigger contract, F-04). -->
+      <button
+        type="button"
+        data-contact-open
+        class="rounded-lg bg-[var(--color-brand-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-700)]"
+      >
+        Hire me
+      </button>
+
+      <ThemeToggle />
+    </div>
+  </div>
+</nav>

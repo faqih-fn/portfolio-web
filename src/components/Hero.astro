@@ -1,0 +1,36 @@
+---
+// src/components/Hero.astro
+// Dashboard hero (F-01.1): owner name, role line ("QA Engineer / SDET"), value
+// proposition, and two CTAs — "View Projects" links to /projects, "Hire me" opens the
+// ContactModal (via the [data-contact-open] trigger contract, F-04). Both CTAs are above
+// the fold on mobile. Static component, zero client JS of its own.
+import site from '../config/site';
+---
+
+<section class="mx-auto max-w-5xl px-4 pt-12 pb-8 sm:pt-16">
+  <p class="reveal text-sm font-semibold uppercase tracking-widest text-[var(--color-brand-600)]">
+    {site.role}
+  </p>
+  <h1 class="reveal mt-3 text-4xl font-bold tracking-tight text-[var(--color-ink)] sm:text-5xl">
+    {site.ownerName}
+  </h1>
+  <p class="reveal mt-4 max-w-2xl text-base text-[var(--color-ink-muted)] sm:text-lg">
+    {site.valueProposition}
+  </p>
+
+  <div class="reveal mt-7 flex flex-wrap items-center gap-3">
+    <a
+      href="/projects"
+      class="lift rounded-xl bg-[var(--color-brand-600)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-700)]"
+    >
+      View Projects
+    </a>
+    <button
+      type="button"
+      data-contact-open
+      class="lift rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-muted)]"
+    >
+      Hire me
+    </button>
+  </div>
+</section>

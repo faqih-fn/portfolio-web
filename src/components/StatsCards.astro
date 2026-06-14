@@ -1,0 +1,34 @@
+---
+// src/components/StatsCards.astro
+// Build-time stats cards (F-01.2): public repo count, total stars, top languages,
+// last-push date. All values are baked at build from src/lib/stats.ts — there is NO
+// client-side API fetch from this component (F-01.5). Static .astro, zero client JS.
+//
+// The stats shape is defined in src/lib/stats.ts (Task #2). We accept it as a prop so
+// this component stays render-only; the page (index.astro) derives stats at build.
+export interface StatItem {
+  label: string;
+  value: string;
+}
+
+export interface Props {
+  stats: StatItem[];
+}
+
+const { stats } = Astro.props;
+---
+
+<section aria-label="Profile stats" class="mx-auto max-w-5xl px-4 py-6">
+  <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    {
+      stats.map((s) => (
+        <li class="lift rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+          <p class="text-2xl font-bold text-[var(--color-ink)]">{s.value}</p>
+          <p class="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--color-ink-muted)]">
+            {s.label}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

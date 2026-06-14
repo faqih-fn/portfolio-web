@@ -1,0 +1,24 @@
+---
+// src/components/FeaturedProjects.astro
+// Dashboard featured-projects grid (F-01.3, F-03.3): renders EXACTLY 3 cards driven by
+// the content collection (selection/ordering authority is the collection; D-6). The
+// caller (index.astro) passes the 3 merged Projects; the build-time assertion in
+// src/lib/projects.ts guarantees the count. Static .astro, zero client JS.
+import type { Project } from '../lib/projects';
+import ProjectCard from './ProjectCard.astro';
+
+export interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+
+<section aria-labelledby="featured-heading" class="mx-auto max-w-5xl px-4 py-8">
+  <h2 id="featured-heading" class="text-xl font-bold tracking-tight text-[var(--color-ink)]">
+    Featured projects
+  </h2>
+  <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</section>
