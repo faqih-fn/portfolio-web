@@ -1,0 +1,78 @@
+---
+// src/islands/ProjectsFilter.astro
+// Island #2 (F-02). Client-side filter over the PRE-RENDERED project cards by language —
+// it shows/hides cards via their data-language / data-topics attributes with NO refetch.
+// The <script> is Astro-processed → external module (D-3). Vanilla TS, no framework.
+//
+// The caller (projects.astro) passes the distinct language facets so the control renders
+// statically (no client-side computation needed for the initial paint).
+export interface Props {
+  languages: string[];
+}
+
+const { languages } = Astro.props;
+---
+
+<div
+  id="projects-filter"
+  class="mb-5 flex flex-wrap items-center gap-2"
+  role="group"
+  aria-label="Filter projects by language"
+>
+  <button
+    type="button"
+    data-filter="*"
+    aria-pressed="true"
+    class="rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-muted)] transition-colors aria-pressed:bg-[var(--color-brand-600)] aria-pressed:text-white"
+  >
+    All
+  </button>
+  {
+    languages.map((lang) => (
+      <button
+        type="button"
+        data-filter={lang}
+        aria-pressed="false"
+        class="rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-muted)] transition-colors aria-pressed:bg-[var(--color-brand-600)] aria-pressed:text-white"
+      >
+        {lang}
+      </button>
+    ))
+  }
+</div>
+
+<script>
+  // Island script: bundled to an external module by Astro (no inline body, D-3).
+  function init(): void {
+    const group = document.getElementById('projects-filter');
+    if (!group) return;
+    const buttons = Array.from(
+      group.querySelectorAll<HTMLButtonElement>('button[data-filter]'),
+    );
+    // Cards live in the grid the page marks with [data-project-grid].
+    const cards = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-project-grid] [data-language]'),
+    );
+
+    function apply(filter: string): void {
+      for (const card of cards) {
+        const lang = card.getAttribute('data-language') ?? '';
+        const topics = (card.getAttribute('data-topics') ?? '')
+          .split(',')
+          .filter(Boolean);
+        const match = filter === '*' || lang === filter || topics.includes(filter);
+        card.toggleAttribute('hidden', !match);
+      }
+    }
+
+    for (const btn of buttons) {
+      btn.addEventListener('click', () => {
+        for (const b of buttons) b.setAttribute('aria-pressed', String(b === btn));
+        apply(btn.getAttribute('data-filter') ?? '*');
+      });
+    }
+  }
+
+  init();
+  document.addEventListener('astro:after-swap', init);
+</script>

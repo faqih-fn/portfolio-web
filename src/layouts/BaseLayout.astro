@@ -1,0 +1,83 @@
+---
+// src/layouts/BaseLayout.astro
+// Shared base layout: SEO <head>, canonical URL, OpenGraph/Twitter cards, semantic
+// landmarks (header/nav/main/footer — F-08), the sticky Topbar, the Footer, and the
+// mounted ContactModal island (F-04). The no-flash theme bootstrap is referenced as an
+// external same-origin script (D-3) — never an inline body.
+// THE single global stylesheet (Tailwind 4 entry + design tokens + Inter Variable + motion
+// layer). Imported once here so every page that uses BaseLayout ships the styles (D-11,
+// D-12). Astro bundles it to an external hashed stylesheet in dist/_astro/ (CSP-clean).
+import '../styles/global.css';
+import site from '../config/site';
+import Topbar from '../components/Topbar.astro';
+import Footer from '../components/Footer.astro';
+import ContactModal from '../islands/ContactModal.astro';
+
+export interface Props {
+  /** Per-page <title>. Falls back to the site name. */
+  title?: string;
+  /** Per-page meta description / OG description. */
+  description?: string;
+  /** OG type, default 'website'. */
+  ogType?: string;
+}
+
+const {
+  title = site.siteName,
+  description = site.valueProposition,
+  ogType = 'website',
+} = Astro.props;
+
+// Canonical + absolute OG URLs from Astro.url + Astro.site (D-13).
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImage = new URL('/og.png', Astro.site).toString();
+const fullTitle = title === site.siteName ? title : `${title} — ${site.ownerName}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- OpenGraph (D-13) -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter card (D-13) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- No-flash theme bootstrap: external blocking same-origin script (D-3, CSP-clean). -->
+    <script is:inline src="/theme-init.js"></script>
+
+    <slot name="head" />
+  </head>
+  <body>
+    <header>
+      <Topbar />
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <!-- ContactModal mounted once at layout level; opened by any [data-contact-open] trigger (F-04). -->
+    <ContactModal />
+  </body>
+</html>

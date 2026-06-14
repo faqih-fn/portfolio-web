@@ -1,0 +1,18 @@
+---
+// src/components/TechStackStrip.astro
+// Tech-stack strip (F-01.4): core tools rendered from site.ts (config-driven, never
+// hardcoded in markup). Static .astro, zero client JS.
+import site from '../config/site';
+---
+
+<section aria-label="Core tools" class="mx-auto max-w-5xl px-4 py-6">
+  <ul class="flex flex-wrap items-center gap-2">
+    {
+      site.techStack.map((tool) => (
+        <li class="rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-muted)]">
+          {tool}
+        </li>
+      ))
+    }
+  </ul>
+</section>

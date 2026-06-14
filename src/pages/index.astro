@@ -1,17 +1,93 @@
 ---
+// src/pages/index.astro — Dashboard (/) — PRIMARY deliverable (T4, F-01/F-07).
+// Replaces the default Astro placeholder. Assembles, at BUILD TIME only (no client
+// fetch — F-01.5):
+//   - Hero (name, role, value proposition, two CTAs)            — Hero.astro
+//   - Stats cards (repo count, stars, top languages, last push) — StatsCards.astro from lib/stats
+//   - Exactly 3 featured project cards (content collection, D-6) — FeaturedProjects.astro
+//   - Tech-stack strip (site.ts)                                — TechStackStrip.astro
+//   - JSON-LD Person with name/jobTitle/url/sameAs and NO email — inline ld+json (F-07.5)
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import StatsCards from '../components/StatsCards.astro';
+import type { StatItem } from '../components/StatsCards.astro';
+import FeaturedProjects from '../components/FeaturedProjects.astro';
+import TechStackStrip from '../components/TechStackStrip.astro';
+import site from '../config/site';
+import { fetchGitHubRepos } from '../lib/github';
+import { fetchGitLabProjects } from '../lib/gitlab';
+import { deriveStats } from '../lib/stats';
+import {
+  buildProjects,
+  selectFeatured,
+  assertFeaturedInvariant,
+  type ProjectOverride,
+} from '../lib/projects';
 
+// ---- Build-time data (D-4). All fetches happen here, never client-side. ----
+const githubRepos = await fetchGitHubRepos(site.githubUsername);
+const gitlabProjects = site.gitlabUsername
+  ? await fetchGitLabProjects(site.gitlabUsername)
+  : [];
+
+// Content-collection overrides → ProjectOverride[].
+const entries = await getCollection('projects');
+const overrides: ProjectOverride[] = entries.map((e) => ({
+  repo: e.data.repo,
+  featured: e.data.featured,
+  order: e.data.order,
+  title: e.data.title,
+  description: e.data.description,
+  demoUrl: e.data.demoUrl,
+  tags: e.data.tags,
+}));
+
+// D-6 build-time invariant: exactly 3 featured entries AND their slugs == site.ts. Throws
+// (failing the build) on any drift. Runs before selection so the count is guaranteed.
+assertFeaturedInvariant(overrides, site.featuredProjects);
+
+const allProjects = buildProjects(githubRepos, gitlabProjects, overrides);
+const featured = selectFeatured(allProjects, overrides); // exactly 3, collection order (D-6)
+
+// ---- Stats (F-01.2), baked from the fetched GitHub set. ----
+const s = deriveStats(githubRepos);
+const numberFmt = new Intl.NumberFormat('en-US');
+const lastPushLabel = s.lastPush
+  ? new Date(s.lastPush).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+  : '—';
+const stats: StatItem[] = [
+  { label: 'Public repos', value: numberFmt.format(s.repoCount) },
+  { label: 'Total stars', value: numberFmt.format(s.totalStars) },
+  { label: 'Top languages', value: s.topLanguages.length ? s.topLanguages.join(' · ') : '—' },
+  { label: 'Last push', value: lastPushLabel },
+];
+
+// ---- JSON-LD Person (F-07.5). name/jobTitle/url/sameAs only — NO email property. ----
+const githubUrl = `https://github.com/${site.githubUsername}`;
+const gitlabUrl = site.gitlabUsername ? `https://gitlab.com/${site.gitlabUsername}` : null;
+const siteUrl = Astro.site ? Astro.site.toString() : '/';
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.ownerName,
+  jobTitle: site.role,
+  url: siteUrl,
+  sameAs: [githubUrl, gitlabUrl, site.linkedinUrl].filter(Boolean),
+};
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title={site.siteName}
+  description={site.valueProposition}
+>
+  <!-- JSON-LD is non-executable data (allowed under CSP, D-3 — the dist CSP guard excludes
+       application/ld+json). is:inline is correct here: it's a data block, not bundled JS.
+       No email field (F-07.5). -->
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(personLd)} slot="head" />
+
+  <Hero />
+  <StatsCards stats={stats} />
+  <FeaturedProjects projects={featured} />
+  <TechStackStrip />
+</BaseLayout>

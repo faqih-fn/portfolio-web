@@ -1,0 +1,78 @@
+---
+// src/pages/projects.astro — Projects (/projects) (T4, F-02).
+// Live project card grid built at BUILD TIME from GitHub (+ optional GitLab) public data,
+// merged with content-collection overrides (manual fields win — F-03.2). Cards show name,
+// description, language, stars, updated date, repo link, and a scheme-validated demo link
+// (only http(s):// — D-5; validation lives in lib/projects.validateUrl). Default sort is
+// updated_at DESCENDING (F-02). The ProjectsFilter island filters the PRE-RENDERED cards
+// client-side by language with NO refetch — it reads each card's data-language /
+// data-topics attributes inside the [data-project-grid] container.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ProjectsFilter from '../islands/ProjectsFilter.astro';
+import { getCollection } from 'astro:content';
+import site from '../config/site';
+import { fetchGitHubRepos } from '../lib/github';
+import { fetchGitLabProjects } from '../lib/gitlab';
+import {
+  buildProjects,
+  sortByUpdatedDesc,
+  type ProjectOverride,
+} from '../lib/projects';
+
+// ---- Build-time data (D-4): never fetched client-side. Failures degrade to []. ----
+const githubRepos = await fetchGitHubRepos(site.githubUsername);
+const gitlabProjects = site.gitlabUsername
+  ? await fetchGitLabProjects(site.gitlabUsername)
+  : [];
+
+const entries = await getCollection('projects');
+const overrides: ProjectOverride[] = entries.map((e) => ({
+  repo: e.data.repo,
+  featured: e.data.featured,
+  order: e.data.order,
+  title: e.data.title,
+  description: e.data.description,
+  demoUrl: e.data.demoUrl,
+  tags: e.data.tags,
+}));
+
+const projects = sortByUpdatedDesc(buildProjects(githubRepos, gitlabProjects, overrides));
+
+// Distinct languages for the static filter control (passed to the island so the initial
+// paint needs no client-side computation — F-02).
+const languages = [...new Set(projects.map((p) => p.language).filter((l): l is string => !!l))]
+  .sort((a, b) => a.localeCompare(b));
+---
+
+<BaseLayout
+  title="Projects"
+  description="Open-source and portfolio projects by Muhammad Faqih, sorted by most recently updated."
+>
+  <section class="mx-auto max-w-5xl px-4 pt-12 pb-8 sm:pt-16">
+    <h1 class="reveal text-3xl font-bold tracking-tight text-[var(--color-ink)] sm:text-4xl">
+      Projects
+    </h1>
+    <p class="reveal mt-3 max-w-2xl text-base text-[var(--color-ink-muted)]">
+      Public repositories from GitHub and GitLab, baked at build time and sorted by most
+      recent activity.
+    </p>
+
+    {languages.length > 0 && <div class="mt-8"><ProjectsFilter languages={languages} /></div>}
+
+    {
+      projects.length === 0 ? (
+        <p class="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-sm text-[var(--color-ink-muted)]">
+          Projects are temporarily unavailable. Please check back soon.
+        </p>
+      ) : (
+        <div
+          data-project-grid
+          class="mt-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {projects.map((project) => <ProjectCard project={project} />)}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

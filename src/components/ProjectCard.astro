@@ -1,0 +1,95 @@
+---
+// src/components/ProjectCard.astro
+// Renders ONE project card (F-02): name, description, language, stars, updated date,
+// repo link, and a scheme-validated demo link (only http(s):// — D-5). All API-fetched
+// strings render via Astro's default escaped {expression} interpolation (never set:html,
+// baseline §3c). Static .astro, zero client JS.
+//
+// data-* attributes feed the ProjectsFilter island (client-side filter by language/topic,
+// no refetch — F-02). Carries `rounded-2xl` cards per brief §4.
+import type { Project } from '../lib/projects';
+import { validateUrl } from '../lib/projects';
+
+export interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+
+const updatedLabel = project.updatedAt
+  ? new Date(project.updatedAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  : null;
+
+// Demo URL is pre-validated to http(s):// in src/lib/projects.ts (validateUrl). It is
+// either a safe absolute URL string or null. Defense-in-depth render guard only.
+const demoUrl = project.demoUrl ?? null;
+const topics = project.topics ?? [];
+// repoUrl is empty for content-collection-only featured entries with no matching API repo
+// (D-4/F-03.2 graceful-degradation path). Scheme-validate (D-5) and only render the
+// Repository link when it is a non-empty http(s) URL — avoids an empty-href anchor
+// (a11y/best-practices, F-09).
+const repoUrl = validateUrl(project.repoUrl);
+---
+
+<article
+  class="lift flex h-full flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
+  data-language={project.language ?? ''}
+  data-topics={topics.join(',')}
+>
+  <div class="flex items-start justify-between gap-2">
+    <h3 class="text-base font-semibold text-[var(--color-ink)]">{project.name}</h3>
+    <span class="shrink-0 text-xs font-medium text-[var(--color-ink-muted)]">
+      ★ {project.stars}
+    </span>
+  </div>
+
+  {
+    project.description && (
+      <p class="mt-2 line-clamp-3 text-sm text-[var(--color-ink-muted)]">
+        {project.description}
+      </p>
+    )
+  }
+
+  <div class="mt-auto flex items-center gap-3 pt-4 text-xs text-[var(--color-ink-muted)]">
+    {
+      project.language && (
+        <span class="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 font-medium">
+          {project.language}
+        </span>
+      )
+    }
+    {updatedLabel && <span>Updated {updatedLabel}</span>}
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+    {
+      repoUrl && (
+        <a
+          href={repoUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+          class="font-medium text-[var(--color-brand-600)] hover:underline"
+        >
+          Repository
+        </a>
+      )
+    }
+    {
+      demoUrl && (
+        <a
+          href={demoUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+          class="font-medium text-[var(--color-brand-600)] hover:underline"
+        >
+          Live demo
+        </a>
+      )
+    }
+  </div>
+</article>

@@ -1,0 +1,16 @@
+# .github/dependabot.yml — weekly dependency updates (Task 8, F-10, baseline §4).
+# Two ecosystems: npm (runtime + dev deps) and github-actions (pinned action SHAs in
+# .github/workflows). Keeps the supply chain current alongside the CI npm-audit gate.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

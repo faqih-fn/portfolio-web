@@ -1,0 +1,80 @@
+---
+// src/islands/ThemeToggle.astro
+// Island #1 (F-05). Flips the `dark` class on <html> and persists the choice to
+// localStorage under the 'theme' key (F-05.1/.2), in sync with public/theme-init.js.
+// The <script> below is Astro-processed and bundled to an EXTERNAL module file — never
+// an is:inline body (D-3, CSP-clean). Vanilla TS, no framework.
+---
+
+<button
+  type="button"
+  id="theme-toggle"
+  aria-label="Toggle dark mode"
+  aria-pressed="false"
+  class="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-2 text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-surface-muted)]"
+>
+  <!-- Sun (shown in dark mode → click to go light) -->
+  <svg
+    class="hidden h-4 w-4 dark:block"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path
+      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+    ></path>
+  </svg>
+  <!-- Moon (shown in light mode → click to go dark) -->
+  <svg
+    class="block h-4 w-4 dark:hidden"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path>
+  </svg>
+</button>
+
+<script>
+  // Island script: bundled to an external module by Astro (no inline body, D-3).
+  const STORAGE_KEY = 'theme';
+
+  function isDark(): boolean {
+    return document.documentElement.classList.contains('dark');
+  }
+
+  function syncPressed(btn: HTMLButtonElement): void {
+    btn.setAttribute('aria-pressed', String(isDark()));
+  }
+
+  function init(): void {
+    const btn = document.getElementById('theme-toggle') as HTMLButtonElement | null;
+    if (!btn) return;
+    syncPressed(btn);
+    btn.addEventListener('click', () => {
+      const next = !isDark();
+      document.documentElement.classList.toggle('dark', next);
+      try {
+        localStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light');
+      } catch {
+        // Storage may be unavailable; toggle still applies for the session.
+      }
+      syncPressed(btn);
+    });
+  }
+
+  init();
+  // Astro view transitions re-run setup after swaps (no-op if unsupported).
+  document.addEventListener('astro:after-swap', init);
+</script>
