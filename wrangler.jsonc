@@ -1,0 +1,17 @@
+{
+  // Cloudflare deploy config. The repo is a static Astro build (output: 'static' → dist/).
+  // Cloudflare retired the old Pages "connect Git" screen; the current dashboard deploys
+  // via the Workers pipeline, which runs `wrangler deploy` and requires this file.
+  // This is an ASSETS-ONLY Worker: it serves the built dist/ folder as a static site
+  // (public/_headers is honored by Workers Static Assets). No Worker script ("main") yet.
+  //
+  // NOTE: the contact endpoint (functions/api/contact.ts) is a Pages Function and is NOT
+  // served by this assets-only config — wiring /api/contact on Workers is a follow-up step
+  // (add "main" + an ASSETS binding + a small router) done once Turnstile/Resend secrets exist.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "qih-digital-portfolio-web",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
