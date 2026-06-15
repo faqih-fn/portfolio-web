@@ -3,4 +3,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://qih-digital-portfolio-web.pages.dev/sitemap-index.xml
+Sitemap: https://qih-digital-portfolio-web.faqih-digital-labs.workers.dev/sitemap-index.xml
