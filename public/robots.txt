@@ -1,7 +1,6 @@
 # robots.txt (F-07, D-13). Allow all crawlers; point at the generated sitemap index.
-# The absolute Sitemap URL host is the production origin pinned in astro.config.mjs `site`
-# (OQ-006 placeholder until the Cloudflare Pages project exists).
+# The absolute Sitemap URL host is the production origin pinned in astro.config.mjs `site`.
 User-agent: *
 Allow: /
 
-Sitemap: https://portfolio-web.pages.dev/sitemap-index.xml
+Sitemap: https://qih-digital-portfolio-web.pages.dev/sitemap-index.xml
