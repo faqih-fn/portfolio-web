@@ -4,15 +4,20 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
+import cloudflare from '@astrojs/cloudflare';
+
 // https://astro.build/config
 export default defineConfig({
   // Fully static output, no SSR adapter (D-1, F-09.7). The contact endpoint is a
   // Cloudflare Pages Function under functions/, deployed alongside the static build.
   output: 'static',
+
   // Production origin (Cloudflare Pages project `qih-digital-portfolio-web`).
   // Drives sitemap / canonical / OG absolute URLs (OQ-006 resolved at launch).
   site: 'https://qih-digital-portfolio-web.pages.dev',
+
   integrations: [sitemap()],
+
   build: {
     // Emit `projects.html` rather than `projects/index.html` so Cloudflare Pages serves
     // `/projects` and `/about` with a direct 200 (no trailing-slash 308 redirect). This
@@ -26,6 +31,7 @@ export default defineConfig({
     // script only when it is under assetsInlineLimit — 0 makes that never true).
     inlineStylesheets: 'never',
   },
+
   vite: {
     plugins: [tailwindcss()],
     build: {
@@ -34,4 +40,6 @@ export default defineConfig({
       assetsInlineLimit: 0,
     },
   },
+
+  adapter: cloudflare(),
 });
