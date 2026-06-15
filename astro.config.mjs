@@ -9,10 +9,9 @@ export default defineConfig({
   // Fully static output, no SSR adapter (D-1, F-09.7). The contact endpoint is a
   // Cloudflare Pages Function under functions/, deployed alongside the static build.
   output: 'static',
-  // OQ-006: production URL is unknown until the Cloudflare Pages project exists.
-  // Placeholder absolute origin used for sitemap / canonical / OG absolute URLs;
-  // owner pins the real URL at launch (Launch checklist item 1).
-  site: 'https://portfolio-web.pages.dev',
+  // Production origin (Cloudflare Pages project `qih-digital-portfolio-web`).
+  // Drives sitemap / canonical / OG absolute URLs (OQ-006 resolved at launch).
+  site: 'https://qih-digital-portfolio-web.pages.dev',
   integrations: [sitemap()],
   build: {
     // Emit `projects.html` rather than `projects/index.html` so Cloudflare Pages serves
