@@ -1,6 +1,8 @@
 # The site is fully static: GitHub/GitLab project data is fetched at BUILD TIME only.
-# This workflow POSTs the Cloudflare Pages Deploy Hook once a day so the site rebuilds
-# and the project listings/stats stay fresh without any code changes.
+# This workflow POSTs the Cloudflare Workers Builds Deploy Hook once a day so the site
+# rebuilds and the project listings/stats stay fresh without any code changes.
+# Hook management: Cloudflare dashboard → Workers & Pages → qih-digital-portfolio-web
+#   → Settings → Builds → Deploy Hooks (branch: main).
 name: Daily redeploy
 
 on:
@@ -16,7 +18,14 @@ jobs:
   redeploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Cloudflare Pages deploy hook
+      - name: Trigger Cloudflare Workers Builds deploy hook
         env:
           CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
-        run: curl -fsS -X POST "$CLOUDFLARE_DEPLOY_HOOK"
+        # -o /dev/null: never print the hook response into the (public) Actions log;
+        # only the HTTP status is shown. The hook URL itself is the credential.
+        run: |
+          if [ -z "$CLOUDFLARE_DEPLOY_HOOK" ]; then
+            echo "::error::CLOUDFLARE_DEPLOY_HOOK secret is not set (create a Workers Builds Deploy Hook and add it as a repo Actions secret)"
+            exit 1
+          fi
+          curl -fsS -o /dev/null -w "deploy hook HTTP %{http_code}\n" -X POST "$CLOUDFLARE_DEPLOY_HOOK"
